@@ -78,7 +78,10 @@ ASFLAGS = -m32 -gdwarf-2
 # FreeBSD ld wants ``elf_i386_fbsd''
 LDFLAGS += -m $(shell $(LD) -V | grep elf_i386 2>/dev/null)
 
-xv6.img: bootblock kernel fs.img
+.PHONY: all
+all: xv6.img fs.img
+	
+xv6.img: bootblock kernel
 	dd if=/dev/zero of=xv6.img count=10000
 	dd if=bootblock of=xv6.img conv=notrunc
 	dd if=kernel of=xv6.img seek=1 conv=notrunc
@@ -133,6 +136,9 @@ vectors.S: vectors.pl
 
 ULIB = ulib.o usys.o printf.o umalloc.o
 
+# DO NOT remove '*.o', so 'make qemu' will work out.
+.PRECIOUS: %.o
+
 _%: %.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^
 	$(OBJDUMP) -S $@ > $*.asm
@@ -164,16 +170,19 @@ UPROGS=\
 	_wc\
 	_zombie\
 
+# if an error is occured, remove fs.img once.
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
 
 -include *.d
 
+.PHONY: clean
 clean: 
 	rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
 	*.o *.d *.asm *.sym vectors.S parport.out \
 	bootblock kernel xv6.img fs.img mkfs \
-	$(UPROGS)
+	$(UPROGS) \
+	*.exe bootother bootother.out initcode initcode.out \
 
 # make a printout
 FILES = $(shell grep -v '^\#' runoff.list)
