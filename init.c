@@ -10,7 +10,7 @@ char *argv[] = { "sh", 0 };
 int
 main(void)
 {
-  int pid, wpid;
+  int pid, wpid, fd;
 
   if(open("console", O_RDWR) < 0){
     mknod("console", 1, 1);
@@ -18,6 +18,12 @@ main(void)
   }
   dup(0);  // stdout
   dup(0);  // stderr
+  
+  fd = open("eth", O_RDWR);
+  if (fd < 0)
+    mknod("eth", 2, 0);
+  else
+    close(fd);
 
   for(;;){
     printf(1, "init: starting sh\n");

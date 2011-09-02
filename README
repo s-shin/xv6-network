@@ -1,3 +1,18 @@
+
+ xv6 with network
+==================
+
+This project will be the implementation of the network in xv6.
+Supported NIC will be NE2000.
+This implement is migrated from MINIX.
+Now we can get the ethernet address (MAC address) of some known ports.
+
+These source codes are licenced under the BSD license, which is the same as the license of xv6 and MINIX.
+
+
+ Original README
+=================
+
 xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
 Version 6 (v6).  xv6 loosely follows the structure and style of v6,
 but is implemented for a modern x86-based multiprocessor using ANSI C.

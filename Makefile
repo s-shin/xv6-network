@@ -26,6 +26,10 @@ OBJS = \
 	uart.o\
 	vectors.o\
 	vm.o\
+	eth/dp.o\
+	eth/8390.o\
+	eth/ne.o\
+	eth/eth.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 #TOOLPREFIX = i386-jos-elf-
@@ -183,6 +187,7 @@ clean:
 	bootblock kernel xv6.img fs.img mkfs \
 	$(UPROGS) \
 	*.exe bootother bootother.out initcode initcode.out \
+	eth/*.o eth/*.d
 
 # make a printout
 FILES = $(shell grep -v '^\#' runoff.list)
@@ -209,7 +214,7 @@ QEMUGDB = $(shell if $(QEMU) -help | grep -q '^-gdb'; \
 ifndef CPUS
 CPUS := 2
 endif
-QEMUOPTS = -hdb fs.img xv6.img -smp $(CPUS)
+QEMUOPTS = -hdb fs.img xv6.img -smp $(CPUS) -net nic,model=ne2k_pci -net user
 
 qemu: fs.img xv6.img
 	$(QEMU) -serial mon:stdio $(QEMUOPTS)

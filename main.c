@@ -53,6 +53,7 @@ mainc(void)
   fileinit();      // file table
   iinit();         // inode cache
   ideinit();       // disk
+  ethinit();       // ethernet
   if(!ismp)
     timerinit();   // uniprocessor timer
   userinit();      // first user process
