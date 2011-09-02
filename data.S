@@ -21,6 +21,7 @@
 
 .data
 .globl data
+.p2align 12
 data:
   .word 1
 

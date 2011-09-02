@@ -51,6 +51,7 @@ endif
 
 # If the makefile can't find QEMU, specify its path here
 #QEMU = 
+QEMU_WIN = "C:/Home/ProgramFiles/qemu/qemu.exe"
 
 # Try to infer the correct QEMU
 ifndef QEMU
@@ -204,6 +205,9 @@ QEMUOPTS = -hdb fs.img xv6.img -smp $(CPUS)
 qemu: fs.img xv6.img
 	$(QEMU) -serial mon:stdio $(QEMUOPTS)
 
+qemu-win: fs.img xv6.img
+	$(QEMU_WIN) -serial file:trace.txt $(QEMUOPTS)
+	
 qemu-memfs: xv6memfs.img
 	$(QEMU) xv6memfs.img -smp $(CPUS)
 
