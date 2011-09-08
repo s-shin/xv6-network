@@ -2,87 +2,71 @@
 // Ethernet driver manager
 //
 
+
 // minix
 #include "minix-compatible.h"
 #include "dp.h"
-extern int dp_init(int base, dpeth_t* dep);
+#include "eth.h"
 
 #include "../traps.h"
 #include "../fs.h"
 #include "../file.h"
 #include "../spinlock.h"
-
+#include "../param.h"
+#include "../mmu.h"
+#include "../proc.h"
 
 // lock
-static struct {
-  struct spinlock lock;
-  int locking;
-} cons;
+static struct spinlock lock;
 
-// available device miner value 'n' maps 'dp_conf[dp_avail[n]]'
-static int dp_avail[DE_PORT_NR];
-
-typedef struct dp_conf {
-  int base;
-  int irq;
-} dp_conf_t;
-
-static dp_conf_t dp_conf[DE_PORT_NR] = {
-  // QEMU ISA NE2000
-  { 0x300,  IRQ_ETH1 },
-  // QEMU PCI NE2000
-  { 0xC100, IRQ_ETH2 },
-  // BOCHS ISA NE2000
-  { 0x240,  IRQ_ETH3 },
-};
-
-static dpeth_t de_table[DE_PORT_NR];
-
+// QEMU PCI: 0xC100, QEMU ISA: 0x300, BOCHS ISA: 240(default)
+static int ports[] = { 0x300, 0xC100, 0x240, 0x280, 0x320, 0x340, 0x360 };
+static dpeth_t de;
 
 // Interrupt
 void
-ethintr(int irq)
+ethintr(void)
 {
-  int i, conf;
-  for (i = 0; i < DE_PORT_NR; ++i) {
-    if (dp_conf[i].irq == irq)
-      break;
-  }
-  if (i == DE_PORT_NR) {
-    cprintf("[ethintr] inavailable IRQ=%d\n", irq);
-    goto bad;
-  }
-  conf = i;
-  for (i = 0; i < DE_PORT_NR; ++i) {
-    if (dp_avail[i] == conf)
-      break;
-  }
-  if (i == DE_PORT_NR) {
-    cprintf("[ethintr] inavailable port=%d\n", conf);
-    goto bad;
-  }
-
-  //interrupt dp_conf[conf]
+  dp_interrupt(&de);
+  wakeup(0);
   return;
-
-bad:
-  panic("[ethintr] fatal error");
 }
 
 int
-ethread(struct inode* ip, char* p, int n /* unused */)
+ethread(struct inode* ip, char* p, int n)
 {
-	//eth* ep = (eth*)p;
-	// read dp_conf[dp_avail[ip->minor]]
-  return 0;
+  eth_t eth = { (uchar*)p, n };
+  
+  // actually, use ioctl()
+  if (p == 0 || n == 0) {
+    dp_dump(&de);
+    return 0;
+  }
+  
+  iunlock(ip);
+  acquire(&lock);
+
+  sleep(0, &lock);
+  dp_read(&de, &eth, 0);
+  
+  release(&lock);
+  ilock(ip);
+  return de.bytes_Rx;
 }
 
 int
-ethwrite(struct inode* ip, char* p, int n /* unused */)
+ethwrite(struct inode* ip, char* p, int n)
 {
-	//eth* ep = (eth*)p;
-	// write dp_conf[dp_avail[ip->minor]]
-  return 0;
+  eth_t eth = { (uchar*)p, n };
+
+  iunlock(ip);
+  acquire(&lock);
+  
+  dp_write(&de, &eth, 0);
+  
+  release(&lock);
+  ilock(ip);
+  return de.bytes_Tx;
 }
 
 // Initialize all ethernet drivers (called in 'mainc()' (in main.c))
@@ -93,22 +77,22 @@ ethinit()
   char name[] = "eth#";
   int ai = 0; // available port index
 
-  initlock(&cons.lock, "eth");
+  initlock(&lock, "eth");
+  
+  devsw[ETHERNET].write = ethwrite;
+  devsw[ETHERNET].read = ethread;
 
   // Initialize the NE2000 device driver
-  for (i = 0; i < DE_PORT_NR; ++i) {
+  for (i = 0; i < NELEM(ports); ++i) {
     cprintf("[ethinit] initialize port %d.\n", i);
-    // first setup de_table[i]
-    memset(&de_table[i], 0, sizeof(dpeth_t));
+    memset(&de, 0, sizeof(de));
     name[3] = '0' + ai;
-    strncpy(de_table[i].de_name, name, strlen(name)+1);
-    de_table[i].de_irq = dp_conf[i].irq;
-    if (dp_init(dp_conf[i].base, &de_table[i])) {
-      dp_avail[ai++] = i;
-      //devsw[ETHERNET].write = ethernetwrite;
-      //devsw[ETHERNET].read = ethernetread;
-      //picenable(IRQ_ETH0);
-      //ioapicenable(IRQ_ETH0);
+    strncpy(de.de_name, name, strlen(name)+1);
+    de.de_irq = IRQ_ETH;
+    if (dp_init(ports[i], &de)) {
+      picenable(de.de_irq);
+      ioapicenable(de.de_irq, 0);
+      break;
     }
   }
 

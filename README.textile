@@ -1,3 +1,44 @@
+
+h1. Xv6 with Network
+
+h2. Abstruct
+
+This project will be the implementation of a network in xv6. Supported NIC will be NE2000. This implement referes to MINIX.
+
+These source codes are licenced under the BSD license, which is the same as the licenses of xv6 and MINIX.
+
+h2. Change Log
+
+h3. [20110902]
+
+I can get the ethernet address (MAC address) of some known ports.
+
+h3. [20110908]
+
+Executing "ethtest", I can see a DHCP/BOOTP packet send with 'tcpdump'. But I never see interrupts from NIC, so I will check the driver source.
+
+h4. Environment:
+
+* Ubuntu11.04(natty) on VirtualBox
+* Bochs2.4.5
+
+h4. Output of tcpdump:
+
+<pre>
+18:38:36.722627 IP 0.0.0.0.bootpc > 255.255.255.255.bootps: BOOTP/DHCP, Request from 52:54:00:12:34:56 (oui Unknown), length 253
+18:38:36.723416 IP 10.0.2.2.bootps > 10.0.2.16.bootpc: BOOTP/DHCP, Reply, length 548
+</pre>
+
+h4. Note:
+
+* The local DHCP server on VirtualBox is located at '10.0.2.2'.
+* The MAC address '52:54:00:12:34:56' is the default address in QEMU, so I use it in BOCHS (see '.bochsrc').
+* BOCHS output an IRQ conflict message but I ignore it now. 
+
+
+h2. Original README
+
+<pre>
 xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
 Version 6 (v6).  xv6 loosely follows the structure and style of v6,
 but is implemented for a modern x86-based multiprocessor using ANSI C.
@@ -48,3 +89,5 @@ To run in QEMU, run "make qemu".
 
 To create a typeset version of the code, run "make xv6.pdf".  This
 requires the "mpage" utility.  See http://www.mesa.nl/pub/mpage/.
+</pre>
+

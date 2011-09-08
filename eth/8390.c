@@ -59,13 +59,13 @@ static void
 ns_start_xmit(dpeth_t *dep, int size, int pageno)
 {
   outb_reg0(dep, DP_TPSR, pageno);
-  outb_reg0(dep, DP_TBCR1, size >> 8);
   outb_reg0(dep, DP_TBCR0, size & 0xFF);
+  outb_reg0(dep, DP_TBCR1, (size >> 8) & 0xFF);
   outb_reg0(dep, DP_CR, CR_NO_DMA | CR_STA | CR_TXP);   /* Fires transmission */
   return;
 }
 
-// shin: NE1k/2k has a programmable I/O, so mem_*() isn't needed.
+// shin: NE1k/2k use a programmable I/O, so mem_*() isn't needed.
 #if 0
 /*
 **  Name:       void mem_getblock(dpeth_t *dep, u16_t offset,
@@ -246,7 +246,6 @@ pio_user2nic(dpeth_t *dep, int pageno, int pktsize)
   ns_rw_setup(dep, CR_DM_RW, pktsize, pageno * DP_PAGESIZE);
   
   do {                          /* Reads chuncks of packet from user area */
-
     bytes = iovp->iod_iovec[ix].iov_size;   /* Size of chunck */
     if (bytes > pktsize) bytes = pktsize;
     //outsb(dep->de_data_port, iovp->iod_proc_nr,
@@ -261,8 +260,10 @@ pio_user2nic(dpeth_t *dep, int pageno, int pktsize)
   } while ((pktsize -= bytes) > 0);
 
   for (ix = 0; ix < 100; ix += 1) {
-    if (inb_reg0(dep, DP_ISR) & ISR_RDC) break;
+    if (inb_reg0(dep, DP_ISR) & ISR_RDC)
+      break;
   }
+  
   if (ix == 100) {
     panic(dep->de_name, RdmaErrMsg, NO_NUM);
   }
@@ -319,12 +320,13 @@ ns_send(dpeth_t * dep, int from_int, int size)
 {
   int queue;
 
-  if (queue = dep->de_sendq_head, dep->de_sendq[queue].sq_filled) {
+  queue = dep->de_sendq_head;
+  if (dep->de_sendq[queue].sq_filled) {
     if (from_int) panic(dep->de_name, "should not be sending ", NO_NUM);
     dep->de_send_s = size;
     return;
   }
-  (dep->de_user2nicf) (dep, dep->de_sendq[queue].sq_sendpage, size);
+  (*dep->de_user2nicf)(dep, dep->de_sendq[queue].sq_sendpage, size);
   dep->bytes_Tx += (long) size;
   dep->de_sendq[queue].sq_filled = TRUE;
   dep->de_flags |= (DEF_XMIT_BUSY | DEF_ACK_SEND);
@@ -484,7 +486,7 @@ ns_interrupt(dpeth_t * dep)
         dep->de_stat.ets_fifoUnder++;
       }
       if ((isr & ISR_TXE) || (tsr & (TSR_CRS | TSR_CDH | TSR_OWC))) {
-        printf("%s: got send Error (0x%02X)\n", dep->de_name, tsr);
+        printf("%s: got send Error (0x%x)\n", dep->de_name, tsr);
         dep->de_stat.ets_sendErr++;
       }
       queue = dep->de_sendq_tail;
@@ -508,7 +510,7 @@ ns_interrupt(dpeth_t * dep)
       ns_recv(dep, TRUE, 0);
     }
     if (isr & ISR_RXE) {
-      printf("%s: got recv Error (0x%04X)\n", dep->de_name, inb_reg0(dep, DP_RSR));
+      printf("%s: got recv Error (0x%x)\n", dep->de_name, inb_reg0(dep, DP_RSR));
       dep->de_stat.ets_recvErr++;
     }
     if (isr & ISR_CNT) {

@@ -1,19 +1,19 @@
 
-#define ETH_MODE_NOMODE         0x0
-#define ETH_MODE_PROMISC_REQ    0x2
-#define ETH_MODE_MULTI_REQ      0x4
-#define ETH_BROAD_REQ           0x8
+#define ETH_IOCTL_UNUSED
+#define ETH_IOCTL_DUMP
 
 // for user's use
 typedef struct {
-  int type;
-  int mode;
-  char* data;
-  int len;
-} eth;
+  uchar* addr;
+  uint size;
+} eth_t;
 
-
-
+// dp.c
+int dp_init(int base, dpeth_t* dep);
+void dp_read(dpeth_t* dep, eth_t* eth, int vectored /* boolean */);
+void dp_write(dpeth_t* dep, eth_t* eth, int vectored /* boolean */);
+void dp_interrupt(dpeth_t* dep);
+void dp_dump(dpeth_t* dep);
 
 
 

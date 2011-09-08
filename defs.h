@@ -21,6 +21,7 @@ void            panic(char*) __attribute__((noreturn));
 
 // net/eth.c
 void            ethinit(void);
+void            ethintr(void);
 
 // exec.c
 int             exec(char*, char**);

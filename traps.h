@@ -32,9 +32,7 @@
 #define IRQ_TIMER        0
 #define IRQ_KBD          1
 #define IRQ_COM1         4
-#define IRQ_ETH1         5      // maybe ethernet device irq values are free.
-#define IRQ_ETH2         9
-#define IRQ_ETH3        11
+#define IRQ_ETH          9
 #define IRQ_IDE         14
 #define IRQ_ERROR       19
 #define IRQ_SPURIOUS    31

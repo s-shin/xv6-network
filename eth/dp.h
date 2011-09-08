@@ -53,14 +53,13 @@ typedef void (*dp_nic2userf_t) (struct dpeth *, int, int);
 typedef void (*dp_getblock_t) (struct dpeth *, u16_t, int, void *);
 #endif
 
-#define DE_PORT_NR      3       /* Number of devices supported   */
 #define SENDQ_NR        2       /* Size of the send queue        */
 #define IOVEC_NR        16      /* Number of IOVEC entries at a time */
 
 typedef struct iovec_dat {
   iovec_t iod_iovec[IOVEC_NR];
   int iod_iovec_s;
-  int iod_proc_nr;
+  //int iod_proc_nr; // shin: not use
   vir_bytes iod_iovec_addr;
 } iovec_dat_t;
 
@@ -82,7 +81,7 @@ typedef struct dpeth {
   port_t de_data_port;          /* For boards using Prog. I/O for xmit/recv */
 
   int de_irq;
-  //int de_int_pending;
+  int de_int_pending;
   //int de_hook;                        /* interrupt hook at kernel */
 
   char de_name[8];
@@ -139,7 +138,7 @@ typedef struct dpeth {
   iovec_dat_t de_write_iovec;
   vir_bytes de_read_s;
   vir_bytes de_send_s;
-  //int de_client;
+  //int de_client; // shin: not use
 /*
   message de_sendmsg;
   iovec_dat_t de_tmp_iovec;

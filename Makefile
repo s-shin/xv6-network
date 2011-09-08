@@ -138,7 +138,7 @@ tags: $(OBJS) bootother.S _init
 vectors.S: vectors.pl
 	perl vectors.pl > vectors.S
 
-ULIB = ulib.o usys.o printf.o umalloc.o
+ULIB = ulib.o usys.o printf.o umalloc.o net/net.o
 
 # DO NOT remove '*.o', so 'make qemu' will work out.
 .PRECIOUS: %.o
@@ -173,6 +173,7 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
+	_ethtest\
 
 # if an error is occured, remove fs.img once.
 fs.img: mkfs README $(UPROGS)
@@ -187,7 +188,7 @@ clean:
 	bootblock kernel xv6.img fs.img mkfs \
 	$(UPROGS) \
 	*.exe bootother bootother.out initcode initcode.out \
-	eth/*.o eth/*.d
+	eth/*.o eth/*.d net/*.o net/*.d
 
 # make a printout
 FILES = $(shell grep -v '^\#' runoff.list)
@@ -202,8 +203,9 @@ print: xv6.pdf
 # run in emulators
 
 bochs : fs.img xv6.img
-	if [ ! -e .bochsrc ]; then ln -s dot-bochsrc .bochsrc; fi
-	bochs -q
+	sudo bochs -q
+	#if [ ! -e .bochsrc ]; then ln -s dot-bochsrc .bochsrc; fi
+	#bochs -q
 
 # try to generate a unique GDB port
 GDBPORT = $(shell expr `id -u` % 5000 + 25000)
@@ -220,7 +222,11 @@ qemu: fs.img xv6.img
 	$(QEMU) -serial mon:stdio $(QEMUOPTS)
 
 qemu-win: fs.img xv6.img
+	rm -f trace.txt
 	$(QEMU_WIN) -serial file:trace.txt $(QEMUOPTS)
+
+qemu-isa: fs.img xv6.img
+	$(QEMU) -serial mon:stdio -hdb fs.img xv6.img -M isapc -net nic,model=ne2k_isa -net user
 	
 qemu-memfs: xv6memfs.img
 	$(QEMU) xv6memfs.img -smp $(CPUS)
