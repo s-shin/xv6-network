@@ -26,8 +26,6 @@ OBJS = \
 	uart.o\
 	vectors.o\
 	vm.o\
-	eth/dp.o\
-	eth/8390.o\
 	eth/ne.o\
 	eth/eth.o\
 
@@ -216,7 +214,7 @@ QEMUGDB = $(shell if $(QEMU) -help | grep -q '^-gdb'; \
 ifndef CPUS
 CPUS := 2
 endif
-QEMUOPTS = -hdb fs.img xv6.img -smp $(CPUS) -net nic,model=ne2k_pci -net user
+QEMUOPTS = -hdb fs.img xv6.img -smp $(CPUS) -net nic,model=ne2k_pci,macaddr=52:54:00:12:34:56 -net user
 
 qemu: fs.img xv6.img
 	$(QEMU) -serial mon:stdio $(QEMUOPTS)

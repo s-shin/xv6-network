@@ -22,6 +22,10 @@ static inline u32_t ntohl(u32_t x) { return NTOHL(x); }
 
 //-----------------------------------------
 
+// Max/min packet size
+#define ETH_MIN_SIZE    60
+#define ETH_MAX_SIZE    1514
+
 typedef struct {
   u8_t dst[6];      // Destination MAC address
   u8_t src[6];      // Source MAC address

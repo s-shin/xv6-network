@@ -9,13 +9,13 @@ These source codes are licenced under the BSD license, which is the same as the 
 
 h2. Change Log
 
-h3. [20110902]
+h3. 20110902
 
 I can get the ethernet address (MAC address) of some known ports.
 
-h3. [20110908]
+h3. 20110908
 
-Executing "ethtest", I can see a DHCP/BOOTP packet send with 'tcpdump'. But I never see interrupts from NIC, so I will check the driver source.
+Executing "ethtest", I can see sent DHCP/BOOTP packets with 'tcpdump'. But I never see interrupts from NIC, so I will check the driver source.
 
 h4. Environment:
 
@@ -35,6 +35,20 @@ h4. Note:
 * The MAC address '52:54:00:12:34:56' is the default address in QEMU, so I use it in BOCHS (see '.bochsrc').
 * BOCHS output an IRQ conflict message but I ignore it now. 
 
+h3. 20110915
+
+I simply rewrite all files under "eth/" to 4 files and implement some TCP/IP protocol stack(Ethernet, IP, UDP, and DHCP), so interrupts occur and an IP address is got by DHCP in both QEMU and BOCHS. The IRQ number switches to 10 for IRQ conflicting in BOCHS. '.bochsrc' need to be changed about the ne2k setting.
+
+h4. Note:
+
+* The implement don't work by building in cygwin(Why...?).
+** Building in linux(Ubuntu) work on qemu in both linux and cygwin.
+
+h4. ToDo:
+
+* Continue to implement driver programs
+* Implement TCP/IP protocol stack.
+** Need IPC for passing packets to processes by port?
 
 h2. Original README
 

@@ -1,107 +1,69 @@
-//
-// Ethernet driver manager
-//
-
-
-// minix
-#include "minix-compatible.h"
-#include "dp.h"
-#include "eth.h"
-
-#include "../traps.h"
+#include "../types.h"
+#include "../defs.h"
 #include "../fs.h"
 #include "../file.h"
-#include "../spinlock.h"
-#include "../param.h"
-#include "../mmu.h"
-#include "../proc.h"
+#include "../traps.h"
+#include "ne.h"
+#include "eth.h"
 
-// lock
-static struct spinlock lock;
+static ne_t ne;
 
-// QEMU PCI: 0xC100, QEMU ISA: 0x300, BOCHS ISA: 240(default)
-static int ports[] = { 0x300, 0xC100, 0x240, 0x280, 0x320, 0x340, 0x360 };
-static dpeth_t de;
-
-// Interrupt
 void
-ethintr(void)
+ethintr()
 {
-  dp_interrupt(&de);
-  wakeup(0);
+  ne_interrupt(&ne);
   return;
+}
+
+// not used because ioctl() isn't still implemented.
+int
+ethioctl(struct inode* ip, char* p, int n)
+{
+  switch (n) {
+  case ETH_SET_RECV_CALLBACK:
+    ne.recv_callback = (ne_callback_t)p;
+    break;
+  }
+  return 0;
 }
 
 int
 ethread(struct inode* ip, char* p, int n)
 {
-  eth_t eth = { (uchar*)p, n };
-  
-  // actually, use ioctl()
-  if (p == 0 || n == 0) {
-    dp_dump(&de);
-    return 0;
-  }
-  
-  iunlock(ip);
-  acquire(&lock);
-
-  sleep(0, &lock);
-  dp_read(&de, &eth, 0);
-  
-  release(&lock);
-  ilock(ip);
-  return de.bytes_Rx;
+  return ne_pio_read(&ne, (uchar*)p, n);
 }
 
 int
 ethwrite(struct inode* ip, char* p, int n)
 {
-  eth_t eth = { (uchar*)p, n };
-
-  iunlock(ip);
-  acquire(&lock);
-  
-  dp_write(&de, &eth, 0);
-  
-  release(&lock);
-  ilock(ip);
-  return de.bytes_Tx;
+  return ne_pio_write(&ne, (uchar*)p, n);
 }
 
-// Initialize all ethernet drivers (called in 'mainc()' (in main.c))
 void
 ethinit()
 {
   int i;
   char name[] = "eth#";
-  int ai = 0; // available port index
+  int ports[] = { 0x300, 0xC100, 0x240, 0x280, 0x320, 0x340, 0x360 };
 
-  initlock(&lock, "eth");
-  
   devsw[ETHERNET].write = ethwrite;
   devsw[ETHERNET].read = ethread;
 
-  // Initialize the NE2000 device driver
   for (i = 0; i < NELEM(ports); ++i) {
-    cprintf("[ethinit] initialize port %d.\n", i);
-    memset(&de, 0, sizeof(de));
-    name[3] = '0' + ai;
-    strncpy(de.de_name, name, strlen(name)+1);
-    de.de_irq = IRQ_ETH;
-    if (dp_init(ports[i], &de)) {
-      picenable(de.de_irq);
-      ioapicenable(de.de_irq, 0);
+    cprintf("Ethernet: Initialize port %d.\n", i);
+    memset(&ne, 0, sizeof(ne));
+    name[3] = '0' + i;
+    strncpy(ne.name, name, strlen(name)+1);
+    ne.irq = IRQ_ETH;
+    ne.base = ports[i];
+    if (ne_probe(&ne)) {
+      ne_init(&ne);
+      picenable(ne.irq);
+      ioapicenable(ne.irq, 0);
       break;
     }
   }
-
+  
   return;
 }
-
-
-
-
-
-
 

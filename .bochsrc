@@ -624,7 +624,7 @@ private_colormap: enabled=0
 # ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:01, ethmod=vde, ethdev="/tmp/vde.ctl"
 # ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
 #ne2k: ioaddr=0x240, irq=9, mac=52:54:00:12:34:56, ethmod=vnet, ethdev=.
-ne2k: ioaddr=0x240, irq=9, mac=52:54:00:12:34:56, ethmod=linux, ethdev=eth0
+ne2k: ioaddr=0x240, irq=10, mac=52:54:00:12:34:56, ethmod=linux, ethdev=eth0
 
 #=======================================================================
 # KEYBOARD_MAPPING:

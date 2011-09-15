@@ -1,34 +1,22 @@
 #include "types.h"
 #include "fcntl.h"
 #include "user.h"
+#include "param.h"
+#include "mmu.h"
+#include "proc.h"
 #include "net/net.h"
 
-void
-dump(const u8_t* buf, int size)
-{
-  int i;
-  const int BR = 16;
-  for (i = 0; i < size; ++i) {
-    if (i != 0) {
-      if (i % BR == 0)
-        printf(1, "\n");
-      else if (i*2 % BR == 0)
-        printf(1, " ");
-    }
-    printf(1, (buf[i] <= 0xF ? "0%x " : "%x "), buf[i]);
-  }
-  printf(1, "\n");
-}
+void dump(const u8_t* buf, int size);
 
-#define DST_MAC_ADDRESS 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
-#define SRC_MAC_ADDRESS 0x52, 0x54, 0x00, 0x12, 0x34, 0x56
+#define MAC_ADDRESS 0x52, 0x54, 0x00, 0x12, 0x34, 0x56
 
 void
-ethtest(int fd)
+getip(int fd)
 {
+  // DHCPパケットを作成し、IPアドレスを取得
   static eth_hdr_t ethhdr = {
-    dst: { DST_MAC_ADDRESS },
-    src: { SRC_MAC_ADDRESS }, 
+    dst: { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },
+    src: { MAC_ADDRESS },
     length: HTONS(ETH_TYPE_IP4),
   };
   static ip4_hdr_t iphdr = {
@@ -55,16 +43,16 @@ ethtest(int fd)
     hlen: DHCP_HLEN_ETH,
     xid: 0,
     flags: DHCP_FLAGS_BCAST,
-    chaddr: { SRC_MAC_ADDRESS },
+    chaddr: { MAC_ADDRESS },
     magic: HTONL(DHCP_MAGIC),
     options: {
       DHCP_TAG_TYPE, 1, DHCP_DISCOVER,
-      DHCP_TAG_CLIENTID, 7, 1, SRC_MAC_ADDRESS,
+      DHCP_TAG_CLIENTID, 7, 1, MAC_ADDRESS,
       0xFF, // stopper
     },
   };
   uchar* t;
-  static uchar buf[sizeof(eth_hdr_t)+sizeof(ip4_hdr_t)+sizeof(udp_hdr_t)+sizeof(dhcp_t)];
+  static uchar buf[ETH_MAX_SIZE];
   int size;
   
   size = sizeof(udphdr) + sizeof(dhcp) - sizeof(dhcp.options) + 13;
@@ -85,9 +73,30 @@ ethtest(int fd)
   memmove(t, &dhcp, sizeof(dhcp));
 
   size += sizeof(ethhdr);
-  printf(1, "write ... ");
-  printf(1, "%d byte\n", write(fd, buf, size));
-  dump(buf, size);
+  printf(1, "write %d byte\n", write(fd, buf, size));
+  //dump(buf, size);
+
+  while ((size = read(fd, buf, ETH_MAX_SIZE)) == 0)
+    sleep(10);
+  if (size == -1)
+    return;
+    
+  printf(1, "receive %d byte\n", size);
+  //dump(buf, size);
+  {
+    int i;
+    dhcp_t* d;
+    d = (dhcp_t*)(buf + sizeof(ethhdr) + sizeof(iphdr) + sizeof(udphdr));
+    printf(1, "Given IPv4 address: ");
+    for (i = 0; i < 4; ++i)
+      printf(1, "%d%s", d->yiaddr[i], i == 3 ? "\n" : ".");
+  }
+}
+
+void
+ethtest(int fd)
+{
+  getip(fd);
 }
 
 int
@@ -101,7 +110,29 @@ main(int argc, char** argv)
   ethtest(fd);
   close(fd);
   exit();
-  return 0; // compiler is happy
+  return 0;
 }
+
+//-----------------------------------
+
+void
+dump(const u8_t* buf, int size)
+{
+  int i;
+  const int BR = 16;
+  for (i = 0; i < size; ++i) {
+    if (i != 0) {
+      if (i % BR == 0)
+        printf(1, "\n");
+      else if (i*2 % BR == 0)
+        printf(1, " ");
+    }
+    printf(1, (buf[i] <= 0xF ? "0%x " : "%x "), buf[i]);
+  }
+  printf(1, "\n");
+}
+
+
+
 
 

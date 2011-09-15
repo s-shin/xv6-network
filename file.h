@@ -41,3 +41,4 @@ extern struct devsw devsw[];
 #define CONSOLE 1
 #define ETHERNET 2         // Major
 #define ETHERNET_NO(n) n   // Miner >= 0
+

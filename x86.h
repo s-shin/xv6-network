@@ -19,6 +19,15 @@ insb(int port, void *addr, int cnt)
 }
 
 static inline void
+insw(int port, void *addr, int cnt)
+{
+  asm volatile("cld; rep insw" :
+               "=D" (addr), "=c" (cnt) :
+               "d" (port), "0" (addr), "1" (cnt) :
+               "memory", "cc");
+}
+
+static inline void
 insl(int port, void *addr, int cnt)
 {
   asm volatile("cld; rep insl" :
@@ -43,6 +52,15 @@ static inline void
 outsb(int port, const void *addr, int cnt)
 {
   asm volatile("cld; rep outsb" :
+               "=S" (addr), "=c" (cnt) :
+               "d" (port), "0" (addr), "1" (cnt) :
+               "cc");
+}
+
+static inline void
+outsw(int port, const void *addr, int cnt)
+{
+  asm volatile("cld; rep outsw" :
                "=S" (addr), "=c" (cnt) :
                "d" (port), "0" (addr), "1" (cnt) :
                "cc");
