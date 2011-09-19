@@ -34,6 +34,7 @@ void            fileinit(void);
 int             fileread(struct file*, char*, int n);
 int             filestat(struct file*, struct stat*);
 int             filewrite(struct file*, char*, int n);
+int             fileioctl(struct file*, int, void*);
 
 // fs.c
 int             dirlink(struct inode*, char*, uint);

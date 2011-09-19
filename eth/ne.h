@@ -193,9 +193,6 @@ typedef struct {
   int sendq_head;      // 初期値 0
   int sendq_tail;      // 初期値 SENDQ_LEN-1
   
-  // セットされていれば受信割り込み時に呼び出される。
-  ne_callback_t recv_callback;
-  
 } ne_t;
 
 

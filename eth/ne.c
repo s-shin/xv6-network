@@ -181,10 +181,9 @@ ne_init(ne_t* ne)
       // 5. TCR
       { DP_TCR, TCR_INTERNAL },
       // 6. リングバッファ初期化 [10]参照
-      { DP_PSTART, ne->send_startpage },
-      //{ DP_BNRY, ne->recv_stoppage-1 },
-      { DP_BNRY, ne->recv_startpage }, // CURRの1つ前であれば良い
+      { DP_PSTART, ne->recv_startpage },
       { DP_PSTOP, ne->recv_stoppage },
+      { DP_BNRY, ne->recv_startpage }, // CURRの1つ前であれば良い
       // 7. ISR初期化
       { DP_ISR, 0xFF },
       // 8. IMR初期化(全割り込みを許容する)
@@ -201,7 +200,6 @@ ne_init(ne_t* ne)
       { DP_MAR3, 0xFF }, { DP_MAR4, 0xFF }, { DP_MAR5, 0xFF },
       { DP_MAR6, 0xFF }, { DP_MAR7, 0xFF },
       // 9. iii. CURRent pointerを初期化
-      //{ DP_CURR, ne->startpage },
       { DP_CURR, ne->recv_startpage + 1 },
       // 10. NICをスタートモードに(0x22)。まだDMAは動いていない。
       { DP_CR, CR_STA | CR_NO_DMA },
@@ -398,8 +396,6 @@ ne_interrupt(ne_t* ne)
     }
     if (isr & ISR_PRX) {
       cprintf("%s: packet received with no error.\n", ne->name);
-      if (ne->recv_callback)
-        ne->recv_callback();
     }
 #if 0
     if (~(isr & (ISR_PTX | ISR_PRX)) != 0) {

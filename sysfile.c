@@ -389,3 +389,17 @@ sys_pipe(void)
   fd[1] = fd1;
   return 0;
 }
+
+int
+sys_ioctl(void)
+{
+  struct file *f;
+  int req;
+  void *p;
+
+  if(argfd(0, 0, &f) < 0 || argint(1, &req) < 0 || argint(2, (int*)&p) < 0)
+    return -1;
+  return fileioctl(f, req, p);
+}
+
+

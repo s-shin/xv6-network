@@ -17,11 +17,11 @@ ethintr()
 
 // not used because ioctl() isn't still implemented.
 int
-ethioctl(struct inode* ip, char* p, int n)
+ethioctl(struct inode* ip, int request, void* p)
 {
-  switch (n) {
-  case ETH_SET_RECV_CALLBACK:
-    ne.recv_callback = (ne_callback_t)p;
+  switch (request) {
+  case ETH_IPC_SETUP:
+    cprintf("%s: ETH_IPC_SETUP isn't still implemented because of no IPC\n", ne.name);
     break;
   }
   return 0;
@@ -48,6 +48,7 @@ ethinit()
 
   devsw[ETHERNET].write = ethwrite;
   devsw[ETHERNET].read = ethread;
+  devsw[ETHERNET].ioctl = ethioctl;
 
   for (i = 0; i < NELEM(ports); ++i) {
     cprintf("Ethernet: Initialize port %d.\n", i);

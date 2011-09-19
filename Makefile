@@ -215,6 +215,7 @@ ifndef CPUS
 CPUS := 2
 endif
 QEMUOPTS = -hdb fs.img xv6.img -smp $(CPUS) -net nic,model=ne2k_pci,macaddr=52:54:00:12:34:56 -net user
+QEMUOPTS_ISA = -hdb fs.img xv6.img -smp 1 -M isapc -net nic,model=ne2k_isa,macaddr=52:54:00:12:34:56 -net user
 
 qemu: fs.img xv6.img
 	$(QEMU) -serial mon:stdio $(QEMUOPTS)
@@ -224,7 +225,7 @@ qemu-win: fs.img xv6.img
 	$(QEMU_WIN) -serial file:trace.txt $(QEMUOPTS)
 
 qemu-isa: fs.img xv6.img
-	$(QEMU) -serial mon:stdio -hdb fs.img xv6.img -M isapc -net nic,model=ne2k_isa -net user
+	$(QEMU) -serial mon:stdio $(QEMUOPTS_ISA) 
 	
 qemu-memfs: xv6memfs.img
 	$(QEMU) xv6memfs.img -smp $(CPUS)

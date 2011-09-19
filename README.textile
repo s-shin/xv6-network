@@ -37,18 +37,25 @@ h4. Note:
 
 h3. 20110915
 
-I simply rewrite all files under "eth/" to 4 files and implement some TCP/IP protocol stack(Ethernet, IP, UDP, and DHCP), so interrupts occur and an IP address is got by DHCP in both QEMU and BOCHS. The IRQ number switches to 10 for IRQ conflicting in BOCHS. '.bochsrc' need to be changed about the ne2k setting.
+I simply rewrite all files under "eth/" to 4 files and implement some TCP/IP protocol stack(Ethernet, IP, UDP, and DHCP), so interrupts occur and an IP address is got by DHCP in -both QEMU and- BOCHS. The IRQ number switches to 10 for IRQ conflicting in BOCHS. '.bochsrc' need to be changed about the ne2k setting.
 
 h4. Note:
 
 * The implement don't work by building in cygwin(Why...?).
 ** Building in linux(Ubuntu) work on qemu in both linux and cygwin.
+* (APPEND) Interrupts don't occur in QEMU...
 
 h4. ToDo:
 
 * Continue to implement driver programs
 * Implement TCP/IP protocol stack.
 ** Need IPC for passing packets to processes by port?
+
+h3. 20110919
+
+* QEMU interrupts problem is solved. In QEMU version 0.14 (after version 0.8?), the IRQ of NE2000 is 11 (but IRQ is conflicted again in BOCHS).
+* I implement 'ioctl' system call.
+
 
 h2. Original README
 

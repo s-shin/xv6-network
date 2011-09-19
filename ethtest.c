@@ -5,6 +5,7 @@
 #include "mmu.h"
 #include "proc.h"
 #include "net/net.h"
+#include "eth/eth.h"
 
 void dump(const u8_t* buf, int size);
 
@@ -96,6 +97,7 @@ getip(int fd)
 void
 ethtest(int fd)
 {
+  ioctl(fd, ETH_IPC_SETUP, 0); // ioctl test.
   getip(fd);
 }
 
